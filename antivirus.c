@@ -12,6 +12,7 @@
 		//var
 		FILE *fp;
 		int status;
+		char *address;
 		int buffer_size = 100;
 		char buffer[buffer_size];
 
@@ -28,13 +29,16 @@
 			if(strcmp(argv[1],load)==0){
 				printf("%s\n", "loading module....");
 				printf("%s\n", "1.get sys_call_table address....");
-				fp=popen("sudo cat /boot/System.map-*-generic| grep sys_call_table","r");
+				fp=popen("sudo cat /boot/System.map-*-generic| grep sys_call_table | awk '{print $1}'","r");
 				if(fp == NULL){
 					printf("step 1 failed");
 					exit(-1);
 				}
+				address = malloc(sizeof(char)*buffer_size);
 				fgets(buffer,buffer_size,fp);
-				printf("address: %s\n", buffer );
+				strcpy(address,buffer);
+				printf("++address: %s\n", buffer );
+				fclose(fp);
 			}else if(strcmp(argv[1],unload)==0){
 				printf("%s\n", "unloading module....");	
 			}else if(strcmp(argv[1],update)==0){
