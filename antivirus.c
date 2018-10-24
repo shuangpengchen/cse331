@@ -1,5 +1,6 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 	int main(int argc, char *argv[]){
 		//const
@@ -9,7 +10,7 @@
 		const char *scan="-scan";
 
 		//var
-		File *fp;
+		FILE *fp;
 		int status;
 		int buffer_size = 100;
 		char buffer[buffer_size];
@@ -29,7 +30,7 @@
 				printf("%s\n", "1.get sys_call_table address....");
 				fp=popen("sudo cat /boot/System.map-*-generic| grep sys_call_table","r");
 				if(fp == NULL){
-					prinft("step 1 failed");
+					printf("step 1 failed");
 					exit(-1);
 				}
 				fgets(buffer,buffer_size,fp);
