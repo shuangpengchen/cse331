@@ -15,14 +15,27 @@
 
 
 	int main(int argc, char *argv[]){
-		//const
+		//cmd options
 		const char *load="-load";
 		const char *unload="-unload";
 		const char *update="-update";
 		const char *scan="-scan";
+		
+		//files and urls
+		static const char *whitelistfilename = "whitelist.out";
+  		static const char *signaturefilename = "signature.out";
+  		static const char *signatureUrl = "http://35.231.146.204/signature.db";
+        static const char *whitelistUrl = "http://35.231.146.204/whitelist.db";
+		
+		//usage printout
+		const char *usage = "\nUsage: \n" 
+            				"-load  load the kernal module.\n" 
+            				"-unload  unload the kernal module.\n" 
+            				"-update  update virus database and whitelist database.\n" 
+            				"-scan  on-demand scan\n" ;
+
 		CURL *curl_handle;
-  		static const char *pagefilename = "db.out";
-		static const char *targetUrl = "http://35.231.146.204/cse331.txt";
+
   		FILE *pagefile;
 
 		//var
@@ -35,11 +48,7 @@
 
 
 
-		const char *usage = "\nUsage: \n" 
-            				"-load  load the kernal module.\n" 
-            				"-unload  unload the kernal module.\n" 
-            				"-update  update virus database and whitelist database.\n" 
-            				"-scan  on-demand scan\n" ;
+		
             				
 		if(argc == 2 ){
 			if(strcmp(argv[1],load)==0){
@@ -74,36 +83,60 @@
   				/* init the curl session */ 
   				curl_handle = curl_easy_init();
  
+  		//--- for signature file download
 				/* set URL to get here */ 
-  				curl_easy_setopt(curl_handle, CURLOPT_URL, targetUrl);
- 
+  				curl_easy_setopt(curl_handle, CURLOPT_URL, signatureUrl);
   				/* Switch on full protocol/debug output while testing */ 
   				curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
- 
   				/* disable progress meter, set to 0L to enable and disable debug output */ 
   				curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
- 
   				/* send all data to this function  */ 
   				curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
  
   				/* open the file */ 
-  				pagefile = fopen(pagefilename, "wb");
+  				pagefile = fopen(signaturefilename, "wb");
   				if(pagefile) {
- 
     				/* write the page body to this file handle */ 
     				curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
- 
     				/* get it! */ 
     				curl_easy_perform(curl_handle);
- 
     				/* close the header file */ 
     				fclose(pagefile);
   				}
+
+  				printf("%s\n", "signature file updated...");
+
+
+
+  		//--- for whitelist file download
+  				/* set URL to get here */ 
+  				curl_easy_setopt(curl_handle, CURLOPT_URL, whitelistUrl);
+  				/* Switch on full protocol/debug output while testing */ 
+  				curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
+  				/* disable progress meter, set to 0L to enable and disable debug output */ 
+  				curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+  				/* send all data to this function  */ 
+  				curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
  
+  				/* open the file */ 
+  				pagefile = fopen(whitelistfilename, "wb");
+  				if(pagefile) {
+    				/* write the page body to this file handle */ 
+    				curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
+    				/* get it! */ 
+    				curl_easy_perform(curl_handle);
+    				/* close the header file */ 
+    				fclose(pagefile);
+  				}
+
+  				printf("%s\n", "whitelist file updated...");
+
+
+ 		//---clean up
   				/* cleanup curl stuff */ 
   				curl_easy_cleanup(curl_handle);
- 
   				curl_global_cleanup();
+
   				printf("%s\n", "done updating database");
 
 
