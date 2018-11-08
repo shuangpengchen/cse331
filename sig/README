@@ -1,0 +1,4 @@
+xxd *.jpg | awk ' NR == 150 {print $2 $3 $4 $5 $6 $7 $8 $9}'
+
+this cmd will convert one jpg file into hex and read the data from line 150  as sig for such file
+
