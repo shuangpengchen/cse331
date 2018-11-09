@@ -63,14 +63,22 @@
 				printf("++address: %s\n", buffer );
 				fclose(fp);
 				printf("%s\n", "2.loading module");
-				
-				printf("%s\n", moduleName);
-				
-				
+				printf(" loading module : %s\n", moduleName);
+				fp=popen("sudo insmod hack_open.ko","r");
+				if(fp == NULL){
+					printf("step 2 failed");
+					exit(-1);
+				}
+				printf("%s\n","module is loaded now, check it with dmesg cmd");
+				fclose(fp);
 			}else if(strcmp(argv[1],unload)==0){
-
-				printf("%s\n", "unloading module....");	
-
+				fp= popen("sudo rmmod hack_open","r");
+				if(fp == NULL){
+					printf("error unloading module");
+					exit(-1);
+				}
+				printf("%s\n", "module unloaded check with dmesg");	
+				fclose(fp);
 			}else if(strcmp(argv[1],update)==0){
 				printf("%s\n", "updating database....");	
 
