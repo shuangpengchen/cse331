@@ -44,7 +44,7 @@
 		char *address;
 		int buffer_size = 100;
 		char buffer[buffer_size];
-		char *moduleName = "hijack-syscal.ko ";
+		char *moduleName = "hack_open.ko";
 
 
             				
@@ -64,15 +64,8 @@
 				fclose(fp);
 				printf("%s\n", "2.loading module");
 				
-				char insmod_cmd[80];
-				strcpy(insmod_cmd,"sudo insmod ");
-				strcat(insmod_cmd,moduleName);
-				strcat(insmod_cmd,"syscall_table=");
-				strcat(insmod_cmd,address);
-				strcat(insmod_cmd," my_path=/home/kgvc/test/hijack-linux-sys-calls/mp3/amr.mp3");
-
-				printf("%s\n", insmod_cmd);
-				//fp=popen(,"r");
+				printf("%s\n", moduleName);
+				
 				
 			}else if(strcmp(argv[1],unload)==0){
 
