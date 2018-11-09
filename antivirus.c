@@ -46,8 +46,6 @@
 		char buffer[buffer_size];
 		char *moduleName = "hack_open.ko";
 
-
-            				
 		if(argc == 2 ){
 			if(strcmp(argv[1],load)==0){
 				printf("%s\n", "loading module....");
@@ -77,23 +75,16 @@
 					printf("error unloading module");
 					exit(-1);
 				}
-				printf("%s\n", "module unloaded check with dmesg");	
+				printf("%s\n", "module unloaded. check with dmesg!");	
 				fclose(fp);
 			}else if(strcmp(argv[1],update)==0){
-				printf("%s\n", "updating database....");	
 
-
-
-
-
+				printf("%s\n", "updating database....");
 				curl_handle = curl_easy_init();
-
-
   				curl_global_init(CURL_GLOBAL_ALL);
- 
   				/* init the curl session */ 
   				curl_handle = curl_easy_init();
- 
+
   		//--- for signature file download
 				/* set URL to get here */ 
   				curl_easy_setopt(curl_handle, CURLOPT_URL, signatureUrl);
@@ -116,8 +107,6 @@
   				}
 
   				printf("%s\n", "signature file updated...");
-
-
 
   		//--- for whitelist file download
   				/* set URL to get here */ 
@@ -142,15 +131,11 @@
 
   				printf("%s\n", "whitelist file updated...");
 
-
  		//---clean up
   				/* cleanup curl stuff */ 
   				curl_easy_cleanup(curl_handle);
   				curl_global_cleanup();
-
   				printf("%s\n", "done updating database");
-
-
 
 			}else{
 				printf("Error: incorrect usage.\n%s\n", usage);
