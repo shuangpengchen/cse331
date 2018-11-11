@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <curl/curl.h>
+#include <sys/stat.h>
+#include <stdbool.h>
+#include <dirent.h>
+
 
 
 
@@ -10,6 +14,106 @@
 	static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream){
   		size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
   		return written;
+	}
+
+	void scan_core(const char* file_name){
+		FILE *file;
+		FILE *wl_or_sig;
+		FILE *fp;
+		static const char *whitelistfilename = "whitelist.out";
+  		static const char *signaturefilename = "signature.out";
+		char tartget_file_hash[PATH_MAX];
+		char wl_content[PATH_MAX];
+
+
+		file = fopen(file_name,"r");
+		if(file ==NULL){
+			printf("failed to open target file : %s\n",file_name);
+			exit(-1);
+		}
+		char temp[300];
+		strcpy(temp,"shasum ");
+		strcat(temp,file_name);
+		strcat(temp," | awk '{print $1}'");
+		fp = popen(temp,"r");
+
+		if(fp ==NULL){
+			printf("%s\n", "fail to hash file");
+			exit(-1);
+		}
+		
+		if( (fgets(tartget_file_hash, PATH_MAX, fp)) == NULL){
+			printf("%s\n","hash failed.." );
+			exit(-1);
+		}    
+    	pclose(fp);
+    	strtok(tartget_file_hash,"\n");
+    	printf("tartget_file_hash is :%s\n", tartget_file_hash);
+
+
+    	printf("%s\n","opening wl file" );
+    	wl_or_sig = fopen(whitelistfilename,"r");
+    	if(wl_or_sig == NULL){
+    		printf("%s\n","fail to open whitelist file" );
+    		exit(-1);
+    	}
+
+    	printf("%s\n","1.reading from whitelist file" );
+
+    	bool need2scan=true;
+    	while((fgets(wl_content, PATH_MAX, fp)) != NULL){
+    		strtok(wl_content,"\n");
+    		if(strcmp(wl_content,"543d684d7f95c6c7bc1aa979ce2109f3075a9688") == 0){
+    			printf("%s\n", "whitelist file has a match.");
+    			need2scan=false;
+    			break;
+    		}
+    	}
+
+    	if(need2scan){
+    		printf("%s\n", "need to scan");
+    	}else{
+    		printf("%s\n", "file is in whitelist..");
+    		return;
+    	}
+
+
+
+
+
+	}
+
+
+	bool is_dir(const char* path){
+		struct stat buf;
+		stat(path,&buf);
+    	return S_ISDIR(buf.st_mode);
+	}
+
+	 void scan_f(const char* start_path){
+		 
+		 if(is_dir(start_path)){
+		 	    DIR *dir;
+		 	    char path[1000];
+
+		 	    struct dirent *entry;
+		 	    dir = opendir(start_path);
+		 	    if(dir){
+		 	    	while((entry = readdir(dir)) != NULL){
+		 	    		if(strcmp(entry->d_name,".")!=0 && strcmp(entry->d_name,"..")!=0){
+							strcpy(path,start_path);
+		 	    			strcat(path,"/");
+		 	    			strcat(path,entry->d_name);
+		 	    			scan_f(path);
+		 	    		}
+		 	    	}
+		 	    	closedir(dir);
+		 	    }
+		 	    return;
+		 }else{
+		 	printf("Scanning file: %s\n", start_path);
+		 	scan_core(start_path);
+		 }
 	}
 	
 
@@ -144,6 +248,14 @@
 		else if(argc ==3){
 			if(strcmp(argv[1],scan)==0){
 				printf("%s\n", "on-demand scan....");
+
+				scan_f(argv[2]);
+
+				
+
+
+
+
 			}else{
 				printf("Error: incorrect usage.\n%s\n", usage);
 			}
