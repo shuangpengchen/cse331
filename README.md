@@ -9,6 +9,6 @@
 ./anti -unload (partly check)
 	will unload the module from teh kernal
 
-./anti -scan file_or_dir (partly check: cover checking against whilte list )
+./anti -scan file_or_dir (partly check: cover checking against wl, match again sigs, rename after matched, not include removing permissions )
 	this is on demand scaning 
 
