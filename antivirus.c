@@ -16,13 +16,88 @@
   		return written;
 	}
 
-	void scan_core(const char* file_name){
+	int getsize(char s[]) {
+   		int c = 0;
+   		while (s[c] != '\0')
+      		c++;
+   		return c;
+	}
+
+	int ascii_to_hex(char c)
+	{
+        int num = (int) c;
+        if(num < 58 && num > 47)
+        {
+                return num - 48; 
+        }
+        if(num < 103 && num > 96)
+        {
+                return num - 87;
+        }
+        return num;
+	}
+
+	void hex2ascii(char *hexsig, int size, unsigned char *address){
+		unsigned char one;
+		unsigned char two;
+		unsigned char sum;
+		unsigned char final_hex[size/2];
+
+		
+		for(int i=0;i<size/2;i++){
+			one = ascii_to_hex(hexsig[i*2]);
+			two = ascii_to_hex(hexsig[i*2+1]);
+			sum = one << 4 | two;
+			final_hex[i] = sum;
+		}
+		memcpy(address,final_hex,sizeof(unsigned char) * size / 2);
+	}
+
+	unsigned char** processSig(unsigned char **sigs,int *sigNumber,int **sigs_length,const char *signaturefilename){
+		FILE *sigfile;
+		char sig_buffer[PATH_MAX];
+
+		sigfile = fopen(signaturefilename,"r");
+		if(sigfile ==NULL){
+			printf("%s\n", "failed to open sigfile");
+			exit(-1);
+		}
+		int counter=0;
+		while((fgets(sig_buffer,PATH_MAX,sigfile))!=NULL){
+			counter++;
+		}
+		*sigNumber = counter;
+		fclose(sigfile);
+		sigs = malloc(sizeof(unsigned char *) * counter);
+		*sigs_length = malloc( sizeof(int) * counter );
+		sigfile = fopen(signaturefilename,"r");
+		int i=0;
+
+
+		while((fgets(sig_buffer,PATH_MAX,sigfile))!=NULL){
+			strtok(sig_buffer,"\n");
+			int size = getsize(sig_buffer);
+			(*sigs_length)[i] = size/2;
+			if((sigs[i] = malloc(sizeof(unsigned char) * size / 2))==NULL){
+				printf("%s\n", "failed to alloc memory for array element.");
+				exit(-1);
+			}
+			hex2ascii(sig_buffer,size,sigs[i]);
+			i++;
+		}
+		return sigs;
+	}
+
+
+
+	void scan_core(const char* file_name,unsigned char** sigs,int *sigs_length,int sigNumber){
 		FILE *file;
 		FILE *wl_or_sig;
 		FILE *fp;
+		char new_name[strlen(file_name)+9];
 		static const char *whitelistfilename = "whitelist.out";
   		static const char *signaturefilename = "signature.out";
-		char tartget_file_hash[PATH_MAX];
+		char target_file_hash[PATH_MAX];
 		char wl_content[PATH_MAX];
 
 
@@ -42,45 +117,118 @@
 			exit(-1);
 		}
 		
-		if( (fgets(tartget_file_hash, PATH_MAX, fp)) == NULL){
+		if( (fgets(target_file_hash, PATH_MAX, fp)) == NULL){
 			printf("%s\n","hash failed.." );
 			exit(-1);
 		}    
     	pclose(fp);
-    	strtok(tartget_file_hash,"\n");
-    	printf("tartget_file_hash is :%s\n", tartget_file_hash);
+    	strtok(target_file_hash,"\n");
+    	printf("target_file_hash is :%s\n", target_file_hash);
 
 
-    	printf("%s\n","opening wl file" );
+    	//printf("%s\n","opening wl file" );
     	wl_or_sig = fopen(whitelistfilename,"r");
     	if(wl_or_sig == NULL){
     		printf("%s\n","fail to open whitelist file" );
     		exit(-1);
     	}
 
-    	printf("%s\n","1.reading from whitelist file" );
+//    	printf("scan_core: %s\n","1.reading from whitelist file" );
 
     	bool need2scan=true;
-    	while((fgets(wl_content, PATH_MAX, fp)) != NULL){
+    	while((fgets(wl_content, PATH_MAX, wl_or_sig)) != NULL){
     		strtok(wl_content,"\n");
-    		if(strcmp(wl_content,"543d684d7f95c6c7bc1aa979ce2109f3075a9688") == 0){
+    		if(strcmp(wl_content,target_file_hash) == 0){
     			printf("%s\n", "whitelist file has a match.");
     			need2scan=false;
     			break;
     		}
     	}
+    	fclose(wl_or_sig);
+    	
 
     	if(need2scan){
-    		printf("%s\n", "need to scan");
+    		printf("---------------------\n%s\n----------------------\n", "need to scan");
+    		//get target file size
+
+    		
+
+
+
+
+    		fseek(file, 0L, SEEK_END);
+    		int targetfilesize = ftell(file);
+			fseek(file, 0L, SEEK_SET);
+
+    		printf("+++size of target file is %d\n",targetfilesize );
+    		
+    		//get the max and min lengths in sigs
+    		int min=0;
+    		int max=0;
+
+    		for(int i=0;i<sigNumber;i++){    			
+    			int length = sigs_length[i];
+    			if(min==0 && max ==0){
+    				min =length;
+    				max = length;
+    			}else if(length > max){
+    				max = length;
+    			}else if(length < min){
+    				min = length;
+    			}
+    		}
+    		//printf("min is %d max is %d\n", min,max);
+
+
+
+    		//main scan core functionality
+    		
+    		int offset =0;
+    		int seek = targetfilesize - max;
+    		unsigned char file_fraction_buffer[max];
+    		bool sig_matched = false;
+    		while(offset != seek){
+    			fseek(file, offset, SEEK_SET);
+    			int read_size = fread(file_fraction_buffer,sizeof(unsigned char),max,file);
+    			//printf("just read in %d bytes of char from file\n", read_size);
+    			if(read_size != max){
+    				printf("WHAT IS GOING ON????   only read %d bytes ?\n", read_size);
+    			}
+    			offset++;
+    			// cmp goes here
+    			for(int i=0;i<sigNumber;i++){
+    				int count_the_match_c =0;
+    				for(int j=0;j<sigs_length[i];j++){
+    					if(file_fraction_buffer[j] != sigs[i][j] ){
+    						count_the_match_c=0;
+    						break;
+    					}else{
+    						count_the_match_c++;
+    					}
+    				}
+    				if(count_the_match_c == sigs_length[i]){
+    					sig_matched=true;
+    					break;
+    				}
+    			}
+    			if(sig_matched){
+    				printf("%s\n", "The file contain malicious code");
+    				printf("before: name is %s\n", file_name);
+    				
+    				strcpy(new_name,file_name);
+    				strcat(new_name,".infected");
+    				rename(file_name,new_name);
+    				break;
+    			}
+    		}
+    		if(!sig_matched){
+    			printf("%s\n", "safe file");		
+    		}
+    		
     	}else{
-    		printf("%s\n", "file is in whitelist..");
+    		printf("-------------------------\n%s\n-------------------------\n", "file is in whitelist..");
     		return;
     	}
-
-
-
-
-
 	}
 
 
@@ -90,8 +238,11 @@
     	return S_ISDIR(buf.st_mode);
 	}
 
-	 void scan_f(const char* start_path){
-		 
+	 void scan_f(const char* start_path,unsigned char** sigs, int* sigs_length,int sigNumber){
+		 //printf("%s\n", "--->in scan_f func:");
+		 printf("target is %s\n", start_path);
+		 //printf("++sigNumber is %d\n", sigNumber);
+
 		 if(is_dir(start_path)){
 		 	    DIR *dir;
 		 	    char path[1000];
@@ -104,7 +255,7 @@
 							strcpy(path,start_path);
 		 	    			strcat(path,"/");
 		 	    			strcat(path,entry->d_name);
-		 	    			scan_f(path);
+		 	    			scan_f(path,sigs,sigs_length,sigNumber);
 		 	    		}
 		 	    	}
 		 	    	closedir(dir);
@@ -112,7 +263,7 @@
 		 	    return;
 		 }else{
 		 	printf("Scanning file: %s\n", start_path);
-		 	scan_core(start_path);
+		 	scan_core(start_path,sigs,sigs_length,sigNumber);
 		 }
 	}
 	
@@ -138,16 +289,19 @@
             				"-update  update virus database and whitelist database.\n" 
             				"-scan  on-demand scan\n" ;
 
-		CURL *curl_handle;
-
-  		FILE *pagefile;
-
+		
 		//var
 		FILE *fp;
+		CURL *curl_handle;
+  		FILE *pagefile;
+        unsigned char **sigs;		//save all the sigs in heap 
+        int *sigs_length;
+        int sigNumber=0;
 		int status;
 		char *address;
 		int buffer_size = 100;
 		char buffer[buffer_size];
+		// should be change when module is ready
 		char *moduleName = "hack_open.ko";
 
 		if(argc == 2 ){
@@ -159,7 +313,7 @@
 					printf("step 1 failed");
 					exit(-1);
 				}
-				address = malloc(sizeof(char)*buffer_size);
+				address = malloc(sizeof( char)*buffer_size);
 				fgets(buffer,buffer_size,fp);
 				strcpy(address,buffer);
 				printf("++address: %s\n", buffer );
@@ -189,7 +343,6 @@
   				/* init the curl session */ 
   				curl_handle = curl_easy_init();
 
-  		//--- for signature file download
 				/* set URL to get here */ 
   				curl_easy_setopt(curl_handle, CURLOPT_URL, signatureUrl);
   				/* Switch on full protocol/debug output while testing */ 
@@ -212,7 +365,6 @@
 
   				printf("%s\n", "signature file updated...");
 
-  		//--- for whitelist file download
   				/* set URL to get here */ 
   				curl_easy_setopt(curl_handle, CURLOPT_URL, whitelistUrl);
   				/* Switch on full protocol/debug output while testing */ 
@@ -235,7 +387,6 @@
 
   				printf("%s\n", "whitelist file updated...");
 
- 		//---clean up
   				/* cleanup curl stuff */ 
   				curl_easy_cleanup(curl_handle);
   				curl_global_cleanup();
@@ -248,14 +399,24 @@
 		else if(argc ==3){
 			if(strcmp(argv[1],scan)==0){
 				printf("%s\n", "on-demand scan....");
-
-				scan_f(argv[2]);
-
+				sigs = processSig(sigs,&sigNumber,&sigs_length,signaturefilename);	//at this point sigs are in memory in ascii code
 				
+//-------testing
+				// for(int i=0;i<sigNumber;i++){
+				// 	printf("sigs[%d] length is  %d\n",i,sigs_length[i] );
+				// }
+				// for(int i=0;i<sigNumber;i++){
+				// 	for(int j=0;j<sigs_length[i];j++){
+				// 		printf("%02x", sigs[i][j] );
+				// 	}
+				// 	printf("%s","\n" );
+				// }
+//-------testing
 
+				// scan file: up to here
+				scan_f(argv[2],sigs,sigs_length,sigNumber);
 
-
-
+			
 			}else{
 				printf("Error: incorrect usage.\n%s\n", usage);
 			}
