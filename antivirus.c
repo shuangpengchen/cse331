@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <curl/curl.h>
 #include <sys/stat.h>
 #include <stdbool.h>
 #include <dirent.h>
+#include <errno.h>
+#include <stdio.h>
+#include <unistd.h>
+
+  
 
 
 
@@ -93,8 +97,8 @@
 		char wl_content[PATH_MAX];
 		file = fopen(file_name,"r");
 		if(file ==NULL){
-			printf("failed to open target file : %s\n",file_name);
-			exit(-1);
+			printf("ERROR: Failed to open target file : %s\n",file_name);
+			return;
 		}
 		char temp[300];
 		strcpy(temp,"shasum ");
@@ -112,7 +116,7 @@
 		}    
     	pclose(fp);
     	strtok(target_file_hash,"\n");
-    	printf("target_file_hash is :%s\n", target_file_hash);
+    	printf("MESSAGE: Hash of target file is :%s\n", target_file_hash);
     	wl_or_sig = fopen(whitelistfilename,"r");
     	if(wl_or_sig == NULL){
     		printf("%s\n","fail to open whitelist file" );
@@ -129,12 +133,11 @@
     	}
     	fclose(wl_or_sig);
     	if(need2scan){
-    		printf("---------------------\n%s\n----------------------\n", "need to scan");
+    		printf("STATUS: %s\n", "need to scan");
     		//get target file size
     		fseek(file, 0L, SEEK_END);
     		int targetfilesize = ftell(file);
 			fseek(file, 0L, SEEK_SET);
-    		printf("+++size of target file is %d\n",targetfilesize );
     		//get the max and min lengths in sigs
     		int min=0;
     		int max=0;
@@ -149,7 +152,7 @@
     				min = length;
     			}
     		}
-    		printf("the max is %d and min is %d\n",max,min );
+    		
     		//main scan  functionality
     		int offset =0;
     		int seek = targetfilesize - max + 1;
@@ -235,22 +238,23 @@
 
 
 
-    			if(sig_matched){
-    				printf("%s\n", "The file contain malicious code");
-    				printf("before: name is %s\n", file_name);
+    			if(sig_matched){ // rename and remove permission
+					printf("MESSAGE: %s\n", "Removing permissions...");
+					struct stat st;
+    				mode_t mode;
+    				stat(file_name, &st);
+    				mode = st.st_mode & 00000;
+    				chmod(file_name, mode);
+    				printf("WARNING: %s\n", "The file contain malicious code");
+    				printf("MESSAGE: %s\n", "Renaming file...");
     				strcpy(new_name,file_name);
     				strcat(new_name,".infected");
     				rename(file_name,new_name);
     				break;
     			}
-
-
-
-
-
     		}
     		if(!sig_matched){
-    			printf("%s\n", "safe file");		
+    			printf("MESSAGE: %s\n", "File is safe");		
     		}
     	}else{
     		printf("-------------------------\n%s\n-------------------------\n", "file is in whitelist..");
@@ -266,9 +270,7 @@
 	}
 
 	 void scan_f(const char* start_path,unsigned char** sigs, int* sigs_length,int sigNumber){
-		 //printf("%s\n", "--->in scan_f func:");
-		 printf("target is %s\n", start_path);
-		 //printf("++sigNumber is %d\n", sigNumber);
+		 
 		 if(is_dir(start_path)){
 		 	    DIR *dir;
 		 	    char path[1000];
@@ -320,11 +322,18 @@
         int *sigs_length;
         int sigNumber=0;
 		int status;
+
 		char *address;
 		int buffer_size = 100;
 		char buffer[buffer_size];
 		// should be change when module is ready
 		char *moduleName = "hack_open.ko";
+
+
+		//testing 
+		//int BUFSIZ = 1024;
+		
+
 		if(argc == 2 ){
 			if(strcmp(argv[1],load)==0){
 				printf("%s\n", "loading module....");
