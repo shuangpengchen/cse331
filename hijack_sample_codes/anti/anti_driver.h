@@ -5,7 +5,7 @@
 #include <linux/types.h>
 #include <linux/module.h>
 #include <linux/input.h>
-
+#include <linux/uaccess.h>
 #define ANTI_MAJOR   60
 #define BUFF_LENGTH 255
 

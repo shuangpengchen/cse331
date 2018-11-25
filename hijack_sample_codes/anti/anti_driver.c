@@ -50,16 +50,16 @@ int anti_open(struct inode *inodep, struct file *filp){
 //     return count;
 // }
 ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_pos){
-    printk(KERN_ALERT "Inside the %s function\n Write Data from user space -> kernel", __FUNCTION__);
+    printk(KERN_ALERT "Inside the %s function\n Write Data from user space -> kernel\n", __FUNCTION__);
 
-
-    int ret = copy_from_user(buffer,buf,1);
+    int ret;
+    ret = copy_from_user(buffer,buf,1);
     if(ret) {
         printk(KERN_DEBUG " Can't copy from user space buffer\n");
         return -EFAULT;
     }
 
-    printk(KERN_ALERT "THE DATA IS : %c\n ", buffer[0]);
+    printk(KERN_ALERT "THE DATA IS : %s\n ", buffer);
     return count;
 }
 
@@ -78,7 +78,8 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
-    int result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
+    int result;
+    result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
     if (result < 0) // fail to register device
         printk(KERN_INFO "fail to load driver\n");
 
