@@ -1,4 +1,3 @@
-#include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/unistd.h>
@@ -38,14 +37,6 @@ int anti_open(struct inode *inodep, struct file *filp){
     printk(KERN_ALERT "Inside the %s function And Open Device[-anti-] \n ", __FUNCTION__);
     return 0;
 }
-// int anti_close(struct inode *inodep, struct file *filp){
-//     printk(KERN_ALERT "inside the %s function\n", __FUNCTION__);
-//     return 0;
-// }
-// ssize_t anti_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos){
-//     printk(KERN_ALERT "inside the %s function\n", __FUNCTION__);
-//     return count;
-// }
 ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_pos){
     printk(KERN_ALERT "Inside the %s function\n Write Data from user space -> kernel\n", __FUNCTION__);
 
@@ -61,22 +52,19 @@ ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_
     return count;
 }
 
-
 asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-    // printk(KERN_INFO "Invoking new process to run app in user space\n");
-    // char *argv[] = { "../../simple_c_program/simple_c_program", NULL };
-    // static char *envp[] = {
-    //     "HOME=/",
-    //     "TERM=linux",
-    //     "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
-    // return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+    printk(KERN_INFO "Invoking new process to run app in user space\n");
+    char *argv[] = { "/usr/bin/logger","blablabla", NULL };
+    static char *envp[] = {
+        "HOME=/",
+        "TERM=linux",
+        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+    call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
     return (*old_open)(filename, flags, mode);
 }
-
-
 
 
 static int __init
