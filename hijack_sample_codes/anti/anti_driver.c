@@ -12,7 +12,7 @@ MODULE_AUTHOR("KGVC");
 MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("This is for the CSE331 anti-virus project");
 
-
+unsigned long *sys_call_table = (unsigned long) 0xc175f180;
 asmlinkage int (*old_open)(const char *filename, int flags, int mode);
 //asmlinkage int (*old_execve)(const char *filename, int flags, int mode);
 
@@ -21,18 +21,14 @@ int set_addr_rw(long unsigned int _addr)
 {
     unsigned int level;
     pte_t *pte = lookup_address(_addr, &level);
-
     if (pte->pte &~ _PAGE_RW) pte->pte |= _PAGE_RW;
-    return 0;
 }
 
 int set_addr_ro(long unsigned int _addr)
 {
     unsigned int level;
     pte_t *pte = lookup_address(_addr, &level);
-
     pte->pte = pte->pte &~_PAGE_RW;
-    return 0;
 }
 
 
@@ -70,16 +66,14 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-    printk(KERN_INFO "Invoking new process to run app in user space\n");
-    char *argv[] = { "../../simple_c_program/simple_c_program", NULL };
-    static char *envp[] = {
-        "HOME=/",
-        "TERM=linux",
-        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
- 
-    return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
-
-    //return (*old_open)(filename, flags, mode);
+    // printk(KERN_INFO "Invoking new process to run app in user space\n");
+    // char *argv[] = { "../../simple_c_program/simple_c_program", NULL };
+    // static char *envp[] = {
+    //     "HOME=/",
+    //     "TERM=linux",
+    //     "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+    // return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+    return (*old_open)(filename, flags, mode);
 }
 
 
@@ -91,25 +85,27 @@ init(void)
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
     int result;
     result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
-    if (result < 0) // fail to register device
+    if (result < 0){ // fail to register device
         printk(KERN_INFO "fail to load driver\n");
-
         return result;
+    }
     memset(buffer, 0, sizeof buffer);
     set_addr_rw((unsigned long) sys_call_table);
     old_open = (void *) sys_call_table[__NR_open];
     sys_call_table[__NR_open] = new_open;
+    printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC +++++++DONE+++++\n");
     return 0;
 }
 
 static void __exit
 cleanup(void)
 {
+    printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC ------------\n");
     unregister_chrdev(ANTI_MAJOR, "anti");
     memset(buffer, 0, sizeof buffer);
     sys_call_table[__NR_open] = old_open;
     set_addr_ro((unsigned long) sys_call_table);
-    printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC ------------\n");
+    printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC -------DONE-----\n");
     return;
 }
 

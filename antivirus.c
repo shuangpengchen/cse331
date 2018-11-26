@@ -182,15 +182,11 @@
     					break;
     				}
     			}
-
-
     			// change the offset from the begin of file
     			offset++;
-
     			//last part of file in buffer with length max
     			if(offset == seek){
     				// final cmp goes here
-
     				int offset2 = offset-1;
     				int tempsize = max-1;
     				while(offset2 != seekend){
@@ -216,8 +212,7 @@
     									count_the_match_c2++;
     								}
     							}	
-    						}
-    						
+    						}	
     						if(count_the_match_c2 == sigs_length[i]){
     							sig_matched=true;
     							//printf("count_the_match_c2 is %d and sigs_length[i] is %d : %s\n", count_the_match_c2,sigs_length[i],"match");
@@ -225,19 +220,10 @@
     						}else{
     						}
     					}
-
     				offset2++;
     				tempsize--;
     				}
-
     			}
-
-
-
-
-
-
-
     			if(sig_matched){ // rename and remove permission
 					printf("MESSAGE: %s\n", "Removing permissions...");
 					struct stat st;
@@ -302,6 +288,7 @@
 		const char *unload="-unload";
 		const char *update="-update";
 		const char *scan="-scan";
+		const char *kscan="-kscan";
 		//files and urls
 		static const char *whitelistfilename = "whitelist.out";
   		static const char *signaturefilename = "signature.out";
@@ -422,7 +409,12 @@
 				printf("%s\n", "on-demand scan....");
 				sigs = processSig(sigs,&sigNumber,&sigs_length,signaturefilename);	//at this point sigs are in memory in ascii code
 				scan_f(argv[2],sigs,sigs_length,sigNumber);
-			}else{
+			}else if(strcmp(argv[1],scan)==0){
+				printf("%s\n", "on-access scan....");
+				sigs = processSig(sigs,&sigNumber,&sigs_length,signaturefilename);	//at this point sigs are in memory in ascii code
+				scan_f(argv[2],sigs,sigs_length,sigNumber);
+			}
+			else{
 				printf("Error: incorrect usage.\n%s\n", usage);
 			}
 		}else{
