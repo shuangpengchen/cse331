@@ -2,7 +2,8 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/unistd.h>
-
+#include <linux/init.h>
+#include <linux/kmod.h>
 #include "anti_driver.h"
 
 
@@ -58,18 +59,28 @@ ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_
         printk(KERN_DEBUG " Can't copy from user space buffer\n");
         return -EFAULT;
     }
-
-    printk(KERN_ALERT "THE DATA IS : %s\n ", buffer);
+    printk(KERN_ALERT "BEFORE\n");
+    printk(KERN_ALERT "THE DATA IS : %c\n ", buffer[0]);
+    printk(KERN_ALERT "AFTER\n");
     return count;
 }
 
 
-// asmlinkage int
-// anti_open(const char *filename, int flags, int mode)
-// {
-//     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-//     return (*old_open)(filename, flags, mode);
-// }
+asmlinkage int
+new_open(const char *filename, int flags, int mode)
+{
+    printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
+    printk(KERN_INFO "Invoking new process to run app in user space\n");
+    char *argv[] = { "../../simple_c_program/simple_c_program", NULL };
+    static char *envp[] = {
+        "HOME=/",
+        "TERM=linux",
+        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+ 
+    return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+
+    //return (*old_open)(filename, flags, mode);
+}
 
 
 
@@ -84,10 +95,10 @@ init(void)
         printk(KERN_INFO "fail to load driver\n");
 
         return result;
-    //memset(buffer, 0, sizeof buffer);
-    //set_addr_rw((unsigned long) sys_call_table);
-    //old_open = (void *) sys_call_table[__NR_open];
-    //sys_call_table[__NR_open] = anti_open;
+    memset(buffer, 0, sizeof buffer);
+    set_addr_rw((unsigned long) sys_call_table);
+    old_open = (void *) sys_call_table[__NR_open];
+    sys_call_table[__NR_open] = new_open;
     return 0;
 }
 
@@ -96,8 +107,8 @@ cleanup(void)
 {
     unregister_chrdev(ANTI_MAJOR, "anti");
     memset(buffer, 0, sizeof buffer);
-    //sys_call_table[__NR_open] = old_open;
-    //set_addr_ro((unsigned long) sys_call_table);
+    sys_call_table[__NR_open] = old_open;
+    set_addr_ro((unsigned long) sys_call_table);
     printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC ------------\n");
     return;
 }
