@@ -32,6 +32,18 @@ int set_addr_ro(long unsigned int _addr)
 
 
 
+static int umh_test( void )
+{
+ char *argv[] = { "/usr/bin/logger", "help!", NULL };
+ static char *envp[] = {
+       "HOME=/",
+       "TERM=linux",
+       "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+
+ return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+}
+
+
 // read write open close operation of char device for com between kernel and user space
 int anti_open(struct inode *inodep, struct file *filp){
     printk(KERN_ALERT "Inside the %s function And Open Device[-anti-] \n ", __FUNCTION__);
@@ -71,16 +83,17 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
-    int result;
-    result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
-    if (result < 0){ // fail to register device
-        printk(KERN_INFO "fail to load driver\n");
-        return result;
-    }
-    memset(buffer, 0, sizeof buffer);
-    set_addr_rw((unsigned long) sys_call_table);
-    old_open = (void *) sys_call_table[__NR_open];
-    sys_call_table[__NR_open] = new_open;
+    umh_test();
+    // int result;
+    // result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
+    // if (result < 0){ // fail to register device
+    //     printk(KERN_INFO "fail to load driver\n");
+    //     return result;
+    // }
+    // memset(buffer, 0, sizeof buffer);
+    // set_addr_rw((unsigned long) sys_call_table);
+    // old_open = (void *) sys_call_table[__NR_open];
+    // sys_call_table[__NR_open] = new_open;
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC +++++++DONE+++++\n");
     return 0;
 }
