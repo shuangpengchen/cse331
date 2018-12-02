@@ -63,17 +63,18 @@ int anti_open(struct inode *inodep, struct file *filp){
     printk(KERN_ALERT "Inside the %s function And Open Device[-anti-] \n ", __FUNCTION__);
     return 0;
 }
+
 ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_pos){
     printk(KERN_ALERT "Inside the %s function\n Write Data from user space -> kernel\n", __FUNCTION__);
 
     int ret;
-    ret = copy_from_user(buffer,buf,1);
+    ret = copy_from_user(buffer,buf,count);
     if(ret) {
         printk(KERN_DEBUG " Can't copy from user space buffer\n");
         return -EFAULT;
     }
     printk(KERN_ALERT "BEFORE\n");
-    printk(KERN_ALERT "THE DATA IS : %c\n ", buffer[0]);
+    printk(KERN_ALERT "THE DATA IS : %s\n ", buffer);
     printk(KERN_ALERT "AFTER\n");
     return count;
 }

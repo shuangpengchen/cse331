@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <linux/limits.h>
+//#include <linux/limits.h>
 
   
 
@@ -242,7 +242,7 @@
     				//try to write to char device
     				FILE *cd_fp;
     				cd_fp = fopen("/dev/anti","w");
-    				if(sigfile ==NULL){
+    				if(cd_fp ==NULL){
 						printf("%s\n", "failed to open /dev/anti file");
 						printf("%s\n","file doesn't exist or something else" );
 						break;
