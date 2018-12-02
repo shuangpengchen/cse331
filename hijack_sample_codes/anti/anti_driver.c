@@ -82,11 +82,13 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     
-    if(flags == 32768 && strcmp(filename,"Makefile") != NULL){
-        printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process(filename);
+    if(flags == 32768 ){
+        if( strstr(filename,"Makefile") != NULL ){
+            printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
+            invoke_user_space_process(filename);
+        }
     }else{
-        printk(KERN_INFO "others Intercepting open(%s, %d, %d)\n", filename, flags, mode);
+        //printk(KERN_INFO "others Intercepting open(%s, %d, %d)\n", filename, flags, mode);
     }
     return (*old_open)(filename, flags, mode);
 
