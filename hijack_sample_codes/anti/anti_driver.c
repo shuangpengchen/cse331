@@ -67,8 +67,8 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-    if(strcmp(filename,"/etc/ld.so/cache") != NULL)
-    //invoke_user_space_process();
+    if(flags == 8000)
+        invoke_user_space_process();
     return (*old_open)(filename, flags, mode);
 }
 
