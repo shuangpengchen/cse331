@@ -70,12 +70,9 @@ new_open(const char *filename, int flags, int mode)
     if(flags >= 80000 ){
         printk(KERN_INFO "80000+ Intercepting open(%s, %X, %X)\n", filename, flags, mode);
         return (*old_open)(filename, flags, mode);
-    }else if(flags == 8000){
-        printk(KERN_INFO "8000 Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-        return invoke_user_space_process();
     }else{
-        printk(KERN_INFO "others Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-        return (*old_open)(filename, flags, mode);
+        printk(KERN_INFO "80000- Intercepting open(%s, %X, %X)\n", filename, flags, mode);
+        return invoke_user_space_process();
     }
 }
 
@@ -84,6 +81,7 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
+    invoke_user_space_process();
     int result;
     result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
     if (result < 0){ // fail to register device
