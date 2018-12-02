@@ -32,9 +32,9 @@ int set_addr_ro(long unsigned int _addr)
 
 
 
-static int invoke_user_space_process( void )
+static int invoke_user_space_process(char *message )
 {
- char *argv[] = { "/usr/bin/logger", "help!", NULL };
+ char *argv[] = { "/usr/bin/logger", message , NULL };
  static char *envp[] = {
        "HOME=/",
        "TERM=linux",
@@ -69,7 +69,7 @@ new_open(const char *filename, int flags, int mode)
     
     if(flags == 32768 ){
         printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process();
+        invoke_user_space_process(filename);
     }else{
         printk(KERN_INFO "others Intercepting open(%s, %d, %d)\n", filename, flags, mode);
     }
@@ -82,7 +82,7 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
-    invoke_user_space_process();
+    invoke_user_space_process("init");
     int result;
     result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
     if (result < 0){ // fail to register device
@@ -101,6 +101,7 @@ static void __exit
 cleanup(void)
 {
     printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC ------------\n");
+    invoke_user_space_process("exit");
     unregister_chrdev(ANTI_MAJOR, "anti");
     memset(buffer, 0, sizeof buffer);
     sys_call_table[__NR_open] = old_open;
