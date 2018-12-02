@@ -32,7 +32,7 @@ int set_addr_ro(long unsigned int _addr)
 
 
 
-static int umh_test( void )
+static int invoke_user_space_process( void )
 {
  char *argv[] = { "/usr/bin/logger", "help!", NULL };
  static char *envp[] = {
@@ -68,13 +68,7 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-    printk(KERN_INFO "Invoking new process to run app in user space\n");
-    char *argv[] = { "/usr/bin/logger","blablabla", NULL };
-    static char *envp[] = {
-        "HOME=/",
-        "TERM=linux",
-        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
-    call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+    invoke_user_space_process();
     return (*old_open)(filename, flags, mode);
 }
 
@@ -83,17 +77,16 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
-    umh_test();
-    // int result;
-    // result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
-    // if (result < 0){ // fail to register device
-    //     printk(KERN_INFO "fail to load driver\n");
-    //     return result;
-    // }
-    // memset(buffer, 0, sizeof buffer);
-    // set_addr_rw((unsigned long) sys_call_table);
-    // old_open = (void *) sys_call_table[__NR_open];
-    // sys_call_table[__NR_open] = new_open;
+    int result;
+    result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
+    if (result < 0){ // fail to register device
+        printk(KERN_INFO "fail to load driver\n");
+        return result;
+    }
+    memset(buffer, 0, sizeof buffer);
+    set_addr_rw((unsigned long) sys_call_table);
+    old_open = (void *) sys_call_table[__NR_open];
+    sys_call_table[__NR_open] = new_open;
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC +++++++DONE+++++\n");
     return 0;
 }
