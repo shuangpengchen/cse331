@@ -81,11 +81,13 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     
-    if(strstr(filename,"Makefile") ){
-        printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process("/usr/bin/logger",filename);
-    }else{
-        //printk(KERN_INFO "others Intercepting open(%s, %d, %d)\n", filename, flags, mode);
+    if(flags == 32768 ){
+        //printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
+        invoke_user_space_process("/bin/anti",filename);
+        if(strstr(buffer,filename)!=NULL){
+            printk(KERN_ALERT "file is bad, stop opening it..");
+            return;
+        }
     }
     return (*old_open)(filename, flags, mode);
 
