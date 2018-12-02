@@ -39,7 +39,6 @@ static int invoke_user_space_process( void )
        "HOME=/",
        "TERM=linux",
        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
-
  return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
 }
 
@@ -68,7 +67,8 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-    invoke_user_space_process();
+    if(strcmp(filename,"/etc/ld.so/cache") != NULL)
+    //invoke_user_space_process();
     return (*old_open)(filename, flags, mode);
 }
 
