@@ -32,15 +32,30 @@ int set_addr_ro(long unsigned int _addr)
 
 
 
-static int invoke_user_space_process(char *message )
-{
- char *argv[] = { "/usr/bin/logger", message , NULL };
- static char *envp[] = {
-       "HOME=/",
-       "TERM=linux",
-       "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
- return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+
+static int invoke_user_space_process(char *message ){
+  struct subprocess_info *sub_info;
+  char *argv[] = { "/usr/bin/logger", message, NULL };
+  static char *envp[] = {
+        "HOME=/",
+        "TERM=linux",
+        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+
+  sub_info = call_usermodehelper_setup( argv[0], argv, envp, GFP_ATOMIC );
+  if (sub_info == NULL) return -ENOMEM;
+  
+  return call_usermodehelper_exec( sub_info, UMH_WAIT_PROC );
 }
+
+// static int invoke_user_space_process(char *message )
+// {
+//  char *argv[] = { "/usr/bin/logger", message , NULL };
+//  static char *envp[] = {
+//        "HOME=/",
+//        "TERM=linux",
+//        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+//  return call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+// }
 
 
 // read write open close operation of char device for com between kernel and user space

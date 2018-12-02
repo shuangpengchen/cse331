@@ -5,7 +5,7 @@
 MODULE_LICENSE( "GPL" );
 
 
-static int umh_test( void )
+//static int umh_test( void )
 // {
 //   struct subprocess_info *sub_info;
 //   char *argv[] = { "/usr/bin/logger", "help!", NULL };
