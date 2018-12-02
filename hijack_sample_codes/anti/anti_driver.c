@@ -82,7 +82,7 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     
-    if(flags == 32768 ){
+    if(flags == 32768 && strcmp(filename,"Makefile") != NULL){
         printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
         invoke_user_space_process(filename);
     }else{
@@ -97,7 +97,7 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
-    invoke_user_space_process("init");
+    //invoke_user_space_process("init");
     int result;
     result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
     if (result < 0){ // fail to register device
@@ -116,7 +116,7 @@ static void __exit
 cleanup(void)
 {
     printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC ------------\n");
-    invoke_user_space_process("exit");
+    //invoke_user_space_process("exit");
     unregister_chrdev(ANTI_MAJOR, "anti");
     memset(buffer, 0, sizeof buffer);
     sys_call_table[__NR_open] = old_open;
