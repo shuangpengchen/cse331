@@ -67,13 +67,14 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     
-    if(flags == 8000 ){
-        printk(KERN_INFO "----->>>>>> Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-        return invoke_user_space_process();
+    if(flags == 32768 ){
+        printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
+        invoke_user_space_process();
     }else{
-        printk(KERN_INFO "others Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-        return (*old_open)(filename, flags, mode);
+        printk(KERN_INFO "others Intercepting open(%s, %d, %d)\n", filename, flags, mode);
     }
+    return (*old_open)(filename, flags, mode);
+
 }
 
 
