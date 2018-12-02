@@ -237,7 +237,20 @@
     				strcpy(new_name,file_name);
     				strcat(new_name,".infected");
     				rename(file_name,new_name);
-    				break;
+
+
+    				//try to write to char device
+    				FILE *cd_fp;
+    				cd_fp = fopen("/dev/anti","w");
+    				if(sigfile ==NULL){
+						printf("%s\n", "failed to open /dev/anti file");
+						printf("%s\n","file doesn't exist or something else" );
+						break;
+					}else{
+						printf("%s\n", "/dev/antt exist, writing to it");
+						fprintf(cd_fp,"file:%s status:%d",file_name,sig_matched);
+						break;	
+					}
     			}
     		}
     		if(!sig_matched){
@@ -408,10 +421,6 @@
 		else if(argc ==3){
 			if(strcmp(argv[1],scan)==0){
 				printf("%s\n", "on-demand scan....");
-				sigs = processSig(sigs,&sigNumber,&sigs_length,signaturefilename);	//at this point sigs are in memory in ascii code
-				scan_f(argv[2],sigs,sigs_length,sigNumber);
-			}else if(strcmp(argv[1],scan)==0){
-				printf("%s\n", "on-access scan....");
 				sigs = processSig(sigs,&sigNumber,&sigs_length,signaturefilename);	//at this point sigs are in memory in ascii code
 				scan_f(argv[2],sigs,sigs_length,sigNumber);
 			}
