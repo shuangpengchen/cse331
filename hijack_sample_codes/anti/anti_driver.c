@@ -66,10 +66,17 @@ ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_
 asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
-    printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
-    if(flags == 8000)
-        invoke_user_space_process();
-    return (*old_open)(filename, flags, mode);
+    
+    if(flags >= 80000 ){
+        printk(KERN_INFO "80000+ Intercepting open(%s, %X, %X)\n", filename, flags, mode);
+        return (*old_open)(filename, flags, mode);
+    }else if(flags == 8000){
+        printk(KERN_INFO "8000 Intercepting open(%s, %X, %X)\n", filename, flags, mode);
+        return invoke_user_space_process();
+    }else{
+        printk(KERN_INFO "others Intercepting open(%s, %X, %X)\n", filename, flags, mode);
+        return (*old_open)(filename, flags, mode);
+    }
 }
 
 
