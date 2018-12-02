@@ -50,7 +50,7 @@ int set_addr_ro(long unsigned int _addr)
  int invoke_user_space_process(const char* arg1,const char *arg2 )
 {
  char *argv[] = { arg1, arg2 , NULL };
- static char *envp[] = {
+ char *envp[] = {
        "HOME=/",
        "TERM=linux",
        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
@@ -73,9 +73,7 @@ ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_
         printk(KERN_DEBUG " Can't copy from user space buffer\n");
         return -EFAULT;
     }
-    printk(KERN_ALERT "BEFORE\n");
     printk(KERN_ALERT "THE DATA IS : %s\n ", buffer);
-    printk(KERN_ALERT "AFTER\n");
     return count;
 }
 
@@ -85,6 +83,7 @@ new_open(const char *filename, int flags, int mode)
     
     if(flags == 32768 ){
         printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
+        invoke_user_space_process("/usr/bin/logger",filename);
     }else{
         //printk(KERN_INFO "others Intercepting open(%s, %d, %d)\n", filename, flags, mode);
     }
