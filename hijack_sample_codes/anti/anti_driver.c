@@ -81,9 +81,9 @@ asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
     
-    if(flags == 32768 ){
+    if(flags == 32768 && strstr(filename,"test/cse331/sig") != NULL){
         //printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process("/bin/anti",filename);
+        invoke_user_space_process("/usr/bin/logger",filename);
         if(strstr(buffer,filename)!=NULL){
             printk(KERN_ALERT "file is bad, stop opening it..");
             return;
