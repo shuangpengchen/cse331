@@ -92,8 +92,10 @@
 		FILE *wl_or_sig;
 		FILE *fp;
 		char new_name[strlen(file_name)+9];
-		static const char *whitelistfilename = "whitelist.out";
-  		static const char *signaturefilename = "signature.out";
+		// static const char *whitelistfilename = "/Users/chenshuangpeng/kg/CSE/cse331/whitelist.out";
+  // 		static const char *signaturefilename = "/Users/chenshuangpeng/kg/CSE/cse331/signature.out";
+  		static const char *whitelistfilename = "/home/tth/test/cse331/whitelist.out";
+  		static const char *signaturefilename = "/home/tth/test/cse331/signature.out";
 		char target_file_hash[PATH_MAX];
 		char wl_content[PATH_MAX];
 		file = fopen(file_name,"r");
@@ -304,8 +306,8 @@
 		const char *scan="-scan";
 		const char *kscan="-kscan";
 		//files and urls
-		static const char *whitelistfilename = "whitelist.out";
-  		static const char *signaturefilename = "signature.out";
+  		static const char *whitelistfilename = "/home/tth/test/cse331/whitelist.out";
+  		static const char *signaturefilename = "/home/tth/test/cse331/signature.out";
   		static const char *signatureUrl = "http://35.231.146.204/signature.db";
         static const char *whitelistUrl = "http://35.231.146.204/whitelist.db";
 		//usage printout
