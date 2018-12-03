@@ -3,6 +3,7 @@
 #include <linux/unistd.h>
 #include <linux/init.h>
 #include <linux/kmod.h>
+#include <linux/mutex.h>
 #include "anti_driver.h"
 
 
@@ -10,6 +11,9 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("KGVC");
 MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("This is for the CSE331 anti-virus project");
+
+static DEFINE_MUTEX(antv_mutex);
+
 
 unsigned long *sys_call_table = (unsigned long) 0xc175f180;
 asmlinkage int (*old_open)(const char *filename, int flags, int mode);
@@ -47,9 +51,9 @@ int set_addr_ro(long unsigned int _addr)
 //   return call_usermodehelper_exec( sub_info, UMH_WAIT_PROC );
 // }
 
- int invoke_user_space_process(const char* arg1,const char *arg2 ,const char *arg3 )
+ int invoke_user_space_process(const char* arg1,const char *arg2 )
 {
- char *argv[] = { arg1, arg2 ,arg3 , NULL };
+ char *argv[] = { arg1, arg2, NULL};
  char *envp[] = {
        "HOME=/",
        "TERM=linux",
@@ -80,10 +84,12 @@ ssize_t anti_write(struct file *filp, char __user *buf, size_t count, loff_t *f_
 asmlinkage int
 new_open(const char *filename, int flags, int mode)
 {
-    
-    if(flags == 32768 && strstr(filename,"test/cse331/sig/kittens/") != NULL){
+
+
+
+    if(flags == 32768){
         //printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process("/bin/anti","-scan",filename);
+        invoke_user_space_process("/usr/bin/logger",filename);
         if(strstr(buffer,filename)!=NULL){
             printk(KERN_ALERT "file is bad, stop opening it..");
             return;
@@ -98,6 +104,7 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
+    invoke_user_space_process("/usr/bin/logger",filename);
     int result;
     result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
     if (result < 0){ // fail to register device
@@ -116,6 +123,7 @@ static void __exit
 cleanup(void)
 {
     printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC ------------\n");
+    invoke_user_space_process("/usr/bin/logger","exit");
     unregister_chrdev(ANTI_MAJOR, "anti");
     memset(buffer, 0, sizeof buffer);
     sys_call_table[__NR_open] = old_open;
