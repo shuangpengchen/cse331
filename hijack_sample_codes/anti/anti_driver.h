@@ -7,7 +7,7 @@
 #include <linux/input.h>
 #include <linux/uaccess.h>
 #define ANTI_MAJOR   60
-#define BUFF_LENGTH 255
+#define BUFF_LENGTH 3072
 
 
 char buffer[BUFF_LENGTH+1];

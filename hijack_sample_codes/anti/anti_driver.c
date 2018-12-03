@@ -12,7 +12,6 @@ MODULE_AUTHOR("KGVC");
 MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("This is for the CSE331 anti-virus project");
 
-static DEFINE_MUTEX(antv_mutex);
 
 
 unsigned long *sys_call_table = (unsigned long) 0xc175f180;
@@ -53,7 +52,7 @@ int set_addr_ro(long unsigned int _addr)
 
  int invoke_user_space_process(const char* arg1,const char *arg2,const char *arg3)
 {
- char *argv[] = { arg1, arg2,,arg3 NULL};
+ char *argv[] = { arg1, arg2,arg3,NULL};
  char *envp[] = {
        "HOME=/",
        "TERM=linux",
@@ -88,8 +87,8 @@ new_open(const char *filename, int flags, int mode)
 
 
     if(flags == 32768){
-        //printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process("/home/tth/test/cse331/anti","-scan",filename);
+        printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
+        //invoke_user_space_process("/home/tth/test/cse331/anti","-scan",filename);
         if(strstr(buffer,filename)!=NULL){
             printk(KERN_ALERT "file is bad, stop opening it..");
             return;
@@ -114,6 +113,8 @@ init(void)
     set_addr_rw((unsigned long) sys_call_table);
     old_open = (void *) sys_call_table[__NR_open];
     sys_call_table[__NR_open] = new_open;
+
+    invoke_user_space_process("/home/tth/test/cse331/anti","-scan","/home/tth/test/cse331/sig/kittens/1.jpg");
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC +++++++DONE+++++\n");
     return 0;
 }
