@@ -51,9 +51,9 @@ int set_addr_ro(long unsigned int _addr)
 //   return call_usermodehelper_exec( sub_info, UMH_WAIT_PROC );
 // }
 
- int invoke_user_space_process(const char* arg1,const char *arg2 )
+ int invoke_user_space_process(const char* arg1,const char *arg2,const char *arg3)
 {
- char *argv[] = { arg1, arg2, NULL};
+ char *argv[] = { arg1, arg2,,arg3 NULL};
  char *envp[] = {
        "HOME=/",
        "TERM=linux",
@@ -89,7 +89,7 @@ new_open(const char *filename, int flags, int mode)
 
     if(flags == 32768){
         //printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process("/usr/bin/logger",filename);
+        invoke_user_space_process("/bin/anti","-scan",filename);
         if(strstr(buffer,filename)!=NULL){
             printk(KERN_ALERT "file is bad, stop opening it..");
             return;
@@ -104,7 +104,6 @@ static int __init
 init(void)
 {
     printk(KERN_INFO "++++++++++++ ANTI PROJECT INIT FUNC ++++++++++++\n");
-    invoke_user_space_process("/usr/bin/logger",filename);
     int result;
     result = register_chrdev(ANTI_MAJOR, "anti", &anti_fops);
     if (result < 0){ // fail to register device
@@ -123,7 +122,6 @@ static void __exit
 cleanup(void)
 {
     printk(KERN_INFO "------------ ANTI PROJECT EXIT FUNC ------------\n");
-    invoke_user_space_process("/usr/bin/logger","exit");
     unregister_chrdev(ANTI_MAJOR, "anti");
     memset(buffer, 0, sizeof buffer);
     sys_call_table[__NR_open] = old_open;
