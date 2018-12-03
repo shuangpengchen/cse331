@@ -89,7 +89,7 @@ new_open(const char *filename, int flags, int mode)
 
     if(flags == 32768){
         //printk(KERN_INFO "----->>>>>> Intercepting open(%s, %d, %d)\n", filename, flags, mode);
-        invoke_user_space_process("/bin/anti","-scan",filename);
+        invoke_user_space_process("/home/tth/test/cse331/anti","-scan",filename);
         if(strstr(buffer,filename)!=NULL){
             printk(KERN_ALERT "file is bad, stop opening it..");
             return;
